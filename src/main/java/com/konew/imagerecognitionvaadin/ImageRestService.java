@@ -39,7 +39,7 @@ public class ImageRestService
 
         HttpEntity httpEntity = new HttpEntity(map,httpHeaders);
 
-        ImageRecognition imageDescription = connectToApi(httpEntity);
+        ImageRecognition imageDescription = getImageData(httpEntity);
 
         return imageDescription;
     }
@@ -52,25 +52,33 @@ public class ImageRestService
         map.add("image", imageAsBytes);
         HttpEntity httpEntity = new HttpEntity(map,httpHeaders);
 
-        ImageRecognition imageDescription = connectToApi(httpEntity);
+        ImageRecognition imageDescription = getImageData(httpEntity);
 
         return imageDescription;
 
     }
 
-    private ImageRecognition connectToApi(HttpEntity httpEntity)
+    private ImageRecognition getImageData(HttpEntity httpEntity)
     {
-        RestTemplate restTemplate = new RestTemplate();
-        ImageRecognition imageDescription = restTemplate.exchange(url,
-                HttpMethod.POST,
-                httpEntity,
-                ImageRecognition.class).getBody();
+        ImageRecognition imageDescription = connectToApi(httpEntity);
 
-        List<String> mappedTags = imageDescription.getDescription().getTags().stream().map(x -> "#" + x).collect(Collectors.toList());
+        List<String> mappedTags = mapTags(imageDescription);
         imageDescription.getDescription().setTags(mappedTags);
 
         return  imageDescription;
 
+    }
+
+    private ImageRecognition connectToApi(HttpEntity httpEntity) {
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.exchange(url,
+                HttpMethod.POST,
+                httpEntity,
+                ImageRecognition.class).getBody();
+    }
+
+    private List<String> mapTags(ImageRecognition imageDescription) {
+        return imageDescription.getDescription().getTags().stream().map(x -> "#" + x).collect(Collectors.toList());
     }
 
     private HttpHeaders addHeaders(String contentType)
